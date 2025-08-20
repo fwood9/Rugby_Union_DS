@@ -185,8 +185,6 @@ def clean_match_historic(df: pd.DataFrame) -> pd.DataFrame:
     .str.replace(r'\s*-\s*', ' - ', regex=True)
     df.drop(["match_date", "match_dt"], axis=1, inplace=True)
 
-
-
     df[['home_scores','away_scores']] = (
         df['result']
           .str.extract(r'(\d+)\s*-\s*(\d+)', expand=True)
@@ -244,9 +242,16 @@ def clean_match_weekly(df: pd.DataFrame) -> pd.DataFrame:
     df["competition"] = df["competition"].apply(lambda x: x.split(":\xa0")[-1].lower().replace(" ", "-"))
     df['match_link'] = df['match_link'].astype(str)  # Ensure link is string for uniqueness checks
     df = df.drop_duplicates(subset=['match_link'], keep='first')  # Keep only first occurrence per match
+    df['result'] = df['result'] \
+    .str.extract(r'(\d+\s*-\s*\d+)', expand=False) \
+    .str.replace(r'\s*-\s*', ' - ', regex=True)
+    df.drop(["match_date", "match_dt"], axis=1, inplace=True)
 
-    df.drop(["match_date", "match_dt"], axis=1, inplace=True)  # Remove raw date/time columns
-
+    df[['home_scores','away_scores']] = (
+        df['result']
+          .str.extract(r'(\d+)\s*-\s*(\d+)', expand=True)
+          .astype(float)
+    )
     def label_winner(row):
         if pd.isna(row['home_scores']) or pd.isna(row['away_scores']):
             return np.nan
@@ -493,10 +498,10 @@ def weekly_scrape(flashscore_rugby_links: list, driver) -> (pd.DataFrame, pd.Dat
             continue
 
         page = BeautifulSoup(driver.page_source, "html.parser")
-        status = page.select_one(".fixedHeaderDuel__detailStatus")
-        teams = page.find_all("a", class_="participantName")
-        home_name = teams[0].get_text(strip=True) if len(teams) >= 1 else None
-        away_name = teams[1].get_text(strip=True) if len(teams) >= 2 else None
+        status = page.select_one(".duelParticipant__score")
+        teams = page.find_all("a", class_=re.compile(".*participantName.*"))
+        home_name = teams[0].text.strip() if len(teams) >= 2 else None
+        away_name = teams[1].text.strip() if len(teams) >= 2 else None
         date_el = page.select_one(".duelParticipant__startTime")
 
         records.append({

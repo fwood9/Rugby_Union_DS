@@ -12,7 +12,7 @@ def create_pipeline(**kwargs):
             make_urls,
             inputs=["params:sport", "params:competition", "params:years", "params:countries"],
             outputs="urls",
-            tags=["historic", "test"]
+            tags=["historic"]
         ),
 
         node(
@@ -20,7 +20,7 @@ def create_pipeline(**kwargs):
             inputs=None,
             outputs="driver",
             name="driver",
-            tags=["historic", "weekly", "test"]
+            tags=["historic", "weekly"]
         ),
 
 
@@ -37,7 +37,7 @@ def create_pipeline(**kwargs):
             inputs=["params:flashscore_rugby_link", "driver"],
             outputs=["raw_matches_w", "raw_odds_w"],
             name="weekly_scraper",
-            tags=["weekly", "test"]
+            tags=["weekly"]
         ),
 
         node(
