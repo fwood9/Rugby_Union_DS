@@ -1,0 +1,18 @@
+ipython>=8.10
+jupyterlab>=3.0
+kedro-datasets[pandas-csvdataset, pandas-exceldataset, pandas-parquetdataset, spark-sparkdataset, plotly-plotlydataset, plotly-jsondataset, matplotlib-matplotlibwriter]>=3.0
+kedro-viz>=6.7.0
+kedro[jupyter]~=0.19.12
+notebook
+scikit-learn~=1.5.1
+seaborn~=0.12.1
+setuptools; python_version >= "3.12"
+pandas==2.2.2
+numpy==1.26.4
+scipy==1.15.2
+scikit-learn==1.5.1
+statsmodels==0.14.2
+census==0.8.24
+
+prospect==0.1.0 # internal package for installing use command pip install git+ssh://git@github.com/PSI-analytics/prospect_package.git@0.1.0
+
