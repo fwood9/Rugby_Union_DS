@@ -3,3 +3,17 @@
 #
 # Documentation for this file format can be found in "Parameters"
 # Link: https://docs.kedro.org/en/0.19.14/configuration/parameters.html
+flashscore_rugby_link:
+  - "https://www.flashscore.co.uk/rugby-union/"
+
+sport:
+  - "rugby-union"
+
+competition:
+  - "premiership-rugby"
+
+years:
+  - "2024-2025"
+
+countries:
+  - "england"
