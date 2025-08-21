@@ -50,4 +50,5 @@ scraped_rugby_odds_df_w:
 scraped_rugby_odds_df_h:
  type: pandas.CSVDataset
  filepath: data/03_primary/scraped_rugby_odds_df_h.csv
+ versioned: True
 
