@@ -3,3 +3,44 @@
 #
 # Documentation for this file format can be found in "Parameters"
 # Link: https://docs.kedro.org/en/0.19.14/configuration/parameters.html
+flashscore_rugby_link:
+  - "https://www.flashscore.co.uk/rugby-union/"
+
+sport:
+  - "rugby-union"
+
+competition:
+  - "premiership-rugby"
+  - "championship-rugby"
+  - "premiership-rugby-cup"
+  - "top-14"
+  - "pro-d2"
+  - "european-rugby-champions-cup"
+  - "challenge-cup"
+  - "united-rugby-championship"
+
+years:
+  - "2024-2025"
+  - "2023-2024"
+  - "2022-2023"
+  - "2021-2022"
+  - "2020-2021"
+  - "2019-2020"
+  - "2018-2019"
+  - "2017-2018"
+  - "2016-2017"
+  - "2015-2016"
+  - "2014-2015"
+  - "2013-2014"
+  - "2012-2013"
+  - "2011-2012"
+  - "2010-2011"
+  - "2009-2010"
+  - "2008-2009"
+
+countries:
+  - "england"
+  - "france"
+  - "europe"
+  - "world"
+  -

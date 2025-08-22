@@ -1,0 +1,54 @@
+driver:
+ type: kedro.io.MemoryDataset
+ copy_mode: assign
+
+matches:
+ type: pandas.CSVDataset
+ filepath: data/02_intermediate/matches.csv
+
+odds:
+ type: pandas.CSVDataset
+ filepath: data/02_intermediate/odds.csv
+
+cleaned_matches:
+ type: pandas.CSVDataset
+ filepath: data/02_intermediate/cleaned_matches.csv
+
+match_df_w:
+ type: pandas.CSVDataset
+ filepath: data/02_intermediate/match_df.csv
+
+match_df_h:
+ type: pandas.CSVDataset
+ filepath: data/02_intermediate/match_df.csv
+
+match_df:
+ type: pandas.CSVDataset
+ filepath: data/02_intermediate/match_df.csv
+
+raw_odds_w:
+ type: pandas.CSVDataset
+ filepath: data/02_intermediate/raw_odds.csv
+
+raw_odds_h:
+ type: pandas.CSVDataset
+ filepath: data/02_intermediate/raw_odds.csv
+
+raw_odds:
+ type: pandas.CSVDataset
+ filepath: data/02_intermediate/raw_odds.csv
+
+mean_odds:
+ type: pandas.CSVDataset
+ filepath: data/02_intermediate/mean_odds.csv
+
+scraped_rugby_odds_df_w:
+ type: pandas.CSVDataset
+ filepath: data/03_primary/scraped_rugby_odds_df_w.csv
+ versioned: True
+
+scraped_rugby_odds_df_h:
+ type: pandas.CSVDataset
+ filepath: data/03_primary/scraped_rugby_odds_df_h.csv
+ versioned: True
+
