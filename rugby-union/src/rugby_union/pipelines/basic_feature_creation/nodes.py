@@ -3,6 +3,10 @@ This is a boilerplate pipeline 'basic_feature_creation'
 generated using Kedro 0.19.14
 """
 import pandas as pd
+import numpy as np
+import math
+
+
 def rename_competitions(df):
     mapping = {"united-rugby-championship-": "urc",
                "european-rugby-champions-cup-": "european-champions-cup",
@@ -34,29 +38,36 @@ def create_team_ids(df):
 
 
 def compute_home_adv(df: pd.DataFrame) -> pd.DataFrame:
-    df_calc = df.copy()
-    df_calc['home_margin'] = df_calc['home_scores'] - df_calc['away_scores']
-    df_calc['away_margin'] = df_calc['away_scores'] - df_calc['home_scores']
+    df_sorted = df.sort_values('match_date').copy()
 
-    home_adv = df_calc.groupby('home_team')['home_margin'].mean().reset_index()
-    home_adv.rename(columns={'home_team': 'team', 'home_margin': 'home_team_advantage'}, inplace=True)
+    # Compute margins
+    df_sorted['home_margin'] = df_sorted['home_scores'] - df_sorted['away_scores']
+    df_sorted['away_margin'] = df_sorted['away_scores'] - df_sorted['home_scores']
 
-    away_disadv = df_calc.groupby('away_team')['away_margin'].mean().reset_index()
-    away_disadv.rename(columns={'away_team': 'team', 'away_margin': 'away_team_disadvantage'}, inplace=True)
-
-    team_avg = pd.merge(home_adv, away_disadv, on='team', how='outer').fillna(0)
-
-    # Only merge the final home/away columns—no extras
-    result = (
-        df
-        .merge(team_avg[['team', 'home_team_advantage']], left_on='home_team', right_on='team', how='left')
-        .drop(columns=['team'])
-        .merge(team_avg[['team', 'away_team_disadvantage']], left_on='away_team', right_on='team', how='left',
-               suffixes=('', '_away'))
-        .drop(columns=['team'])
+    # Rolling average of home margin: last 10 HOME games before the current one
+    df_sorted['home_team_advantage'] = (
+        df_sorted
+        .groupby('home_team')['home_margin']
+        .rolling(window=10, min_periods=1, closed='left')
+        .mean()
+        .reset_index(level=0, drop=True)
     )
-    result["total_home_advantage"] = result["home_team_advantage"] - result["away_team_disadvantage"]
-    return result
+
+    # Similarly for away margin: average over last 10 AWAY games before current one
+    df_sorted['away_team_disadvantage'] = (
+        df_sorted
+        .groupby('away_team')['away_margin']
+        .rolling(window=10, min_periods=1, closed='left')
+        .mean()
+        .reset_index(level=0, drop=True)
+    )
+
+    # Net home advantage metric
+    df_sorted['total_home_advantage'] = (
+            df_sorted['home_team_advantage'] - df_sorted['away_team_disadvantage']
+    )
+
+    return df_sorted
 
 
 
@@ -75,10 +86,100 @@ def stack_dfs(*dfs: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def create_features(df):
+def calculate_expected_probability(home_elo, away_elo, home_advantage):
+    """Classic Elo expected win probability formula."""
+    return 1 / (1 + 10 ** ((away_elo - home_elo - home_advantage) / 400))
+
+
+def calculate_expected_margin(home_elo, away_elo, home_advantage):
+    """Rescale probability to margin range [-1, +1]."""
+    exp_prob = calculate_expected_probability(home_elo, away_elo, home_advantage)
+    return (exp_prob - 0.5) * 2
+
+
+def margin_of_victory_multiplier(margin, max_factor=10, base_factor=1, decay=0.1, default_factor=1.5):
+    margin = abs(margin)
+    if margin == 0:
+        return default_factor
+    if margin < 1:
+        return base_factor
+    return max_factor - (max_factor - base_factor) * math.exp(-decay * (margin - 1))
+
+
+
+def compute_pre_and_post_match_elo(
+    dataframe: pd.DataFrame,
+    initial_rating: float = 1500,
+    k_factor: float = 30
+) -> pd.DataFrame:
+    """
+    Compute pre- and post-match Elo ratings with margin-of-victory adjustment always active.
+    Skips matches with no valid result.
+    """
+    # Sort and prepare data
+    df = dataframe.sort_values('match_date').copy()
+    df['total_home_advantage'] = df['total_home_advantage'].fillna(0)
+
+    # Initialize Elo ratings
+    teams = pd.unique(df[['home_team', 'away_team']].values.ravel())
+    elo = {team: initial_rating for team in teams}
+
+    # Prepare output structure
+    output = df.copy()
+    for col in ['home_elo_pre_match', 'away_elo_pre_match',
+                'home_elo_post_match', 'away_elo_post_match']:
+        output[col] = np.nan
+
+    # Iterate matches
+    for idx, row in output.iterrows():
+        result = row.get('result')
+        if pd.isnull(result) or not result:
+            continue
+
+        home = row['home_team']
+        away = row['away_team']
+        home_pre = elo.get(home, initial_rating)
+        away_pre = elo.get(away, initial_rating)
+
+        output.at[idx, 'home_elo_pre_match'] = home_pre
+        output.at[idx, 'away_elo_pre_match'] = away_pre
+
+        exp_home = calculate_expected_probability(home_pre, away_pre, row['total_home_advantage'])
+        exp_away = 1 - exp_home
+
+        home_scores = row['home_scores']
+        away_scores = row['away_scores']
+
+        if home_scores > away_scores:
+            actual_home, actual_away = 1.0, 0.0
+        elif away_scores > home_scores:
+            actual_home, actual_away = 0.0, 1.0
+        else:  # draw
+            actual_home = actual_away = 0.5
+
+        margin = home_scores - away_scores
+        multiplier = margin_of_victory_multiplier(margin)
+
+        home_post = home_pre + k_factor * multiplier * (actual_home - exp_home)
+        away_post = away_pre + k_factor * multiplier * (actual_away - exp_away)
+
+        output.at[idx, 'home_elo_post_match'] = home_post
+        output.at[idx, 'away_elo_post_match'] = away_post
+
+        elo[home] = home_post
+        elo[away] = away_post
+
+    return output
+
+
+def create_basic_features(df):
+
+    df.drop(columns=["home_team_odds", "draw_team_odds", "away_team_odds", "home_prob_BE", "draw_prob_BE", "away_prob_BE", "home_prob", "draw_prob", "away_prob"], inplace=True)
 
     df = create_match_ids(df)
     df = create_team_ids(df)
     df = compute_home_adv(df)
+    df = compute_pre_and_post_match_elo(df)
 
     return df
+

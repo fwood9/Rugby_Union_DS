@@ -16,9 +16,9 @@ def create_pipeline(**kwargs) -> Pipeline:
         )
         ,
         node(
-            func=create_features,
+            func=create_basic_features,
             inputs="complete_matches_df",
-            outputs="complete_matches_with_features_df",
+            outputs="complete_matches_df_with_features",
             name="create_features_node"
         )
     ])
