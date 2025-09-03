@@ -69,56 +69,56 @@ complete_matches_df_with_elo_features:
 
 model_input_df:
  type: pandas.CSVDataset
- filepath: data/04_feature/model_input_df.csv
+ filepath: data/05_model_input/model_input_df.csv
 
 xgboost_regression_forecasting_future_score_difference_model_ensemble:
  type: pickle.PickleDataset
- filepath: data/06_models/xgboost_regression_forecasting_future_score_difference_model_ensemble.pkl
+ filepath: data/06_models/score_difference_model/xgboost_regression_forecasting_future_score_difference_model_ensemble.pkl
 
 xgboost_regression_forecasting_future_score_difference_model_coefficients_df:
   type: pandas.CSVDataset
-  filepath: data/07_model_output/xgboost_coefficients.csv
+  filepath: data/07_model_output/score_difference_model/xgboost_coefficients.csv
 
 xgboost_regression_forecasting_future_score_difference_model_coefficients_summary_df:
   type: pandas.CSVDataset
-  filepath: data/07_model_output/xgboost_coefficients_summary.csv
+  filepath: data/07_model_output/score_difference_model/xgboost_coefficients_summary.csv
 
 xgboost_regression_forecasting_future_score_difference_model_predictions_df:
   type: pandas.CSVDataset
-  filepath: data/07_model_output/xgboost_predictions.csv
+  filepath: data/07_model_output/score_difference_model/xgboost_predictions.csv
 
 xgboost_regression_forecasting_future_score_difference_model_train_predictions_df:
   type: pandas.CSVDataset
-  filepath: data/07_model_output/xgboost_train_predictions.csv
+  filepath: data/07_model_output/score_difference_model/xgboost_train_predictions.csv
 
 xgboost_regression_forecasting_future_score_difference_model_test_predictions_df:
   type: pandas.CSVDataset
-  filepath: data/07_model_output/xgboost_test_predictions.csv
+  filepath: data/07_model_output/score_difference_model/xgboost_test_predictions.csv
 
 xgboost_regression_forecasting_future_score_difference_model_metrics_df:
   type: pandas.CSVDataset
-  filepath: data/07_model_output/xgboost_metrics.csv
+  filepath: data/07_model_output/score_difference_model/xgboost_metrics.csv
 
 xgboost_regression_forecasting_future_score_difference_model_train_metrics_df:
   type: pandas.CSVDataset
-  filepath: data/07_model_output/xgboost_train_metrics.csv
+  filepath: data/07_model_output/score_difference_model/xgboost_train_metrics.csv
 
 xgboost_regression_forecasting_future_score_difference_model_bag_metrics_df:
   type: pandas.CSVDataset
-  filepath: data/07_model_output/xgboost_bag_metrics.csv
+  filepath: data/07_model_output/score_difference_model/xgboost_bag_metrics.csv
 
 model_coefficients_summary_plot:
   type: matplotlib.MatplotlibWriter
-  filepath: data/08_reporting/model_coefficients_summary_plot.png
+  filepath: data/08_reporting/score_difference_model/model_coefficients_summary_plot.png
   save_args:
     format: png
 
 xgboost_regression_forecasting_future_score_difference_model_ensemble_predictions_df:
   type: pandas.CSVDataset
-  filepath: data/06_models/ensemble_predictions.csv
+  filepath: data/06_models/score_difference_model/ensemble_predictions.csv
 
 xgboost_regression_forecasting_future_score_difference_model_individual_predictions_df:
   type: pandas.CSVDataset
-  filepath: data/06_models/individual_predictions.csv
+  filepath: data/06_models/score_difference_model/individual_predictions.csv
 
 

@@ -51,10 +51,10 @@ def train_score_difference_model(df):
         "last_avg_match_scores_difference",
         "last_avg_5_match_scores_difference",
         "last_avg_10_match_scores_difference",
-       # "home_win_streak", "away_win_streak",
+        "home_win_streak", "away_win_streak",
         "avg_score_diff_last_3_between_teams",
-       # "avg_score_diff_last_3_same_fixture",
-      #  "total_home_advantage_last_3_games",
+      #  "avg_score_diff_last_3_same_fixture",
+        "total_home_advantage_last_3_games",
         "score_diff_last_fixture"
     ]
 
@@ -79,7 +79,7 @@ def train_score_difference_model(df):
         xgboost_cv=3,
         xgboost_learning_rate=[0.01],
         xgboost_n_estimators=[1000],
-        xgboost_max_depth=[2],
+        xgboost_max_depth=[3],
         xgboost_min_child_weight=[10],
     )
 
@@ -99,10 +99,10 @@ def evaluate_score_difference_model(
         "last_avg_match_scores_difference",
         "last_avg_5_match_scores_difference",
         "last_avg_10_match_scores_difference",
-      #  "home_win_streak", "away_win_streak",
+        "home_win_streak", "away_win_streak",
         "avg_score_diff_last_3_between_teams",
-       # "avg_score_diff_last_3_same_fixture",
-       # "total_home_advantage_last_3_games",
+        #"avg_score_diff_last_3_same_fixture",
+        "total_home_advantage_last_3_games",
         "score_diff_last_fixture"
     ]
 
