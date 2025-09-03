@@ -1,0 +1,27 @@
+# This is a boilerplate parameters config generated for pipeline 'score_difference_model'
+# using Kedro 0.19.14.
+#
+# Documentation for this file format can be found in "Parameters"
+# Link: https://docs.kedro.org/en/0.19.14/configuration/parameters.html
+
+
+model_error_metrics: ["r2_score", "mean_absolute_error"]
+return_train_test_predictions_df: true
+rename_predicted_columns_dict: {}
+
+
+model_features:
+  - total_home_advantage
+  - pre_match_elo_difference
+  - elo_avg_change_difference_last_match
+  - elo_avg_change_difference_last_5_matches
+  - elo_avg_change_difference_last_10_matches
+  - last_avg_match_scores_difference
+  - last_avg_5_match_scores_difference
+  - last_avg_10_match_scores_difference
+  - home_win_streak
+  - away_win_streak
+  - avg_score_diff_last_3_between_teams
+  - avg_score_diff_last_3_same_fixture
+  - total_home_advantage_last_3_games
+  - score_diff_last_fixture

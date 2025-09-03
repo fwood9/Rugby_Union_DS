@@ -10,15 +10,20 @@ def create_pipeline(**kwargs) -> Pipeline:
     return pipeline([
         node(
             func=stack_dfs,
-            inputs=["scraped_rugby_odds_df_w", "scraped_rugby_odds_df_1"],
+            inputs=["scraped_rugby_odds_df_h", "scraped_rugby_odds_df_1"],
             outputs="complete_matches_df",
             name="stack_dataframes_node"
-        )
-        ,
+        ),
         node(
             func=create_basic_features,
             inputs="complete_matches_df",
-            outputs="complete_matches_df_with_features",
+            outputs="complete_matches_df_with_basic_features",
             name="create_features_node"
+        ),
+        node(
+            func=create_elo_features,
+            inputs="complete_matches_df_with_basic_features",
+            outputs="complete_matches_df_with_elo_features",
+            name="create_elo_features_node"
         )
     ])

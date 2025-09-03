@@ -59,7 +59,66 @@ scraped_rugby_odds_df_1:
  type: pandas.CSVDataset
  filepath: data/03_primary/scraped_rugby_odds_df_1.csv
 
-complete_matches_df_with_features:
+complete_matches_df_with_basic_features:
  type: pandas.CSVDataset
- filepath: data/04_feature/complete_matches_df_with_features.csv
+ filepath: data/04_feature/complete_matches_df_with_basic_features.csv
+
+complete_matches_df_with_elo_features:
+ type: pandas.CSVDataset
+ filepath: data/04_feature/complete_matches_df_with_elo_features.csv
+
+model_input_df:
+ type: pandas.CSVDataset
+ filepath: data/04_feature/model_input_df.csv
+
+xgboost_regression_forecasting_future_score_difference_model_ensemble:
+ type: pickle.PickleDataset
+ filepath: data/06_models/xgboost_regression_forecasting_future_score_difference_model_ensemble.pkl
+
+xgboost_regression_forecasting_future_score_difference_model_coefficients_df:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/xgboost_coefficients.csv
+
+xgboost_regression_forecasting_future_score_difference_model_coefficients_summary_df:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/xgboost_coefficients_summary.csv
+
+xgboost_regression_forecasting_future_score_difference_model_predictions_df:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/xgboost_predictions.csv
+
+xgboost_regression_forecasting_future_score_difference_model_train_predictions_df:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/xgboost_train_predictions.csv
+
+xgboost_regression_forecasting_future_score_difference_model_test_predictions_df:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/xgboost_test_predictions.csv
+
+xgboost_regression_forecasting_future_score_difference_model_metrics_df:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/xgboost_metrics.csv
+
+xgboost_regression_forecasting_future_score_difference_model_train_metrics_df:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/xgboost_train_metrics.csv
+
+xgboost_regression_forecasting_future_score_difference_model_bag_metrics_df:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/xgboost_bag_metrics.csv
+
+model_coefficients_summary_plot:
+  type: matplotlib.MatplotlibWriter
+  filepath: data/08_reporting/model_coefficients_summary_plot.png
+  save_args:
+    format: png
+
+xgboost_regression_forecasting_future_score_difference_model_ensemble_predictions_df:
+  type: pandas.CSVDataset
+  filepath: data/06_models/ensemble_predictions.csv
+
+xgboost_regression_forecasting_future_score_difference_model_individual_predictions_df:
+  type: pandas.CSVDataset
+  filepath: data/06_models/individual_predictions.csv
+
 
