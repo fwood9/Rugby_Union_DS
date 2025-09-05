@@ -8,6 +8,26 @@ import pandas as pd
 
 
 def train_score_difference_model(df):
+    """
+        Train an ensemble XGBoost regression model to predict the home team's score margin.
+
+        Uses engineered features related to Elo ratings, score differences, team streaks, and home advantage.
+
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            DataFrame containing match data with required features and target variable 'home_margin'.
+
+        Returns
+        -------
+        model_ensemble
+            Trained model ensemble returned by `train_model_ensemble` with specified hyperparameters.
+
+        Notes
+        -----
+        - Drops rows with missing values in features or target before training.
+        - Uses bagging and cross-validation for robust training.
+        """
     X_variables = [
         "total_home_advantage",
         "pre_match_elo_difference",
@@ -55,7 +75,31 @@ def evaluate_score_difference_model(
     model_error_metrics=None,
     return_train_test_predictions_df=False,
     rename_predicted_columns_dict=None):
+    """
+        Evaluate a trained XGBoost regression ensemble on match data for home score margin prediction.
 
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            DataFrame with the features and target 'home_margin' for evaluation.
+        xgboost_model_ensemble : object
+            Trained model ensemble to evaluate.
+        model_error_metrics : list of str, optional
+            Metrics to evaluate, default is ["r2_score", "mean_absolute_error"].
+        return_train_test_predictions_df : bool, optional
+            Whether to return DataFrame with train/test predictions, default False.
+        rename_predicted_columns_dict : dict, optional
+            Optional dict to rename prediction columns in returned DataFrame.
+
+        Returns
+        -------
+        dict or pandas.DataFrame
+            Evaluation metrics dictionary or DataFrame with predictions based on parameters.
+
+        Notes
+        -----
+        - Drops rows with missing values before evaluation.
+        """
     X_variables = [
         "total_home_advantage",
         "pre_match_elo_difference",
