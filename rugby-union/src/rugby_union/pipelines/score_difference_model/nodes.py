@@ -6,40 +6,6 @@ from prospect.models.training import train_model_ensemble
 from prospect.models.training import evaluate_model_ensemble
 import pandas as pd
 
-def drop_first_games(df):
-    """
-    Removes matches where either team is playing their first game,
-    while preserving all columns including 'train_test_split' and
-    keeping a unique 'observation_id' for each row.
-
-    Assumes 'match_date', 'home_team', and 'away_team' columns exist.
-    """
-
-    df = df.copy()
-    df['match_date'] = pd.to_datetime(df['match_date'])
-
-    # Get first appearance per team
-    team_appearances = pd.concat([
-        df[['home_team', 'match_date']].rename(columns={'home_team': 'team'}),
-        df[['away_team', 'match_date']].rename(columns={'away_team': 'team'})
-    ])
-
-    first_match_dates = team_appearances.groupby('team')['match_date'].min().to_dict()
-
-    df['home_team_first'] = df.apply(lambda row: row['match_date'] == first_match_dates[row['home_team']], axis=1)
-    df['away_team_first'] = df.apply(lambda row: row['match_date'] == first_match_dates[row['away_team']], axis=1)
-
-    # Filter out first games
-    df_filtered = df[~(df['home_team_first'] | df['away_team_first'])].drop(
-        columns=['home_team_first', 'away_team_first']
-    )
-
-
-    df_filtered = df_filtered.copy()
-    df_filtered['observation_id'] = df_filtered.index
-
-    return df_filtered
-
 
 def train_score_difference_model(df):
     X_variables = [
@@ -77,9 +43,9 @@ def train_score_difference_model(df):
         bag_sample_with_replacement=True,
         bag_split_size=0.8,
         xgboost_cv=3,
-        xgboost_learning_rate=[0.01],
+        xgboost_learning_rate=[0.012],
         xgboost_n_estimators=[1000],
-        xgboost_max_depth=[3],
+        xgboost_max_depth=[5],
         xgboost_min_child_weight=[10],
     )
 

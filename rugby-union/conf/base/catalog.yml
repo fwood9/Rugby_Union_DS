@@ -55,9 +55,22 @@ complete_matches_df:
  type: pandas.CSVDataset
  filepath: data/03_primary/complete_matches_df.csv
 
+
 scraped_rugby_odds_df_1:
  type: pandas.CSVDataset
  filepath: data/03_primary/scraped_rugby_odds_df_1.csv
+
+scraped_rugby_odds_df_2:
+ type: pandas.CSVDataset
+ filepath: data/03_primary/scraped_rugby_odds_df_2.csv
+
+scraped_rugby_odds_df_3:
+ type: pandas.CSVDataset
+ filepath: data/03_primary/scraped_rugby_odds_df_3.csv
+
+scraped_rugby_odds_df_4:
+ type: pandas.CSVDataset
+ filepath: data/03_primary/scraped_rugby_odds_df_4.csv
 
 complete_matches_df_with_basic_features:
  type: pandas.CSVDataset
@@ -121,4 +134,6 @@ xgboost_regression_forecasting_future_score_difference_model_individual_predicti
   type: pandas.CSVDataset
   filepath: data/06_models/score_difference_model/individual_predictions.csv
 
-
+model_input_with_encoded_winner_df:
+ type: pandas.CSVDataset
+ filepath: data/05_model_input/match_outcome_model/model_input_with_encoded_winner_df.csv

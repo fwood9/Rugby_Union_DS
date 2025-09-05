@@ -36,78 +36,12 @@ def create_team_ids(df):
 
     return df
 
-
-def compute_home_adv(df: pd.DataFrame) -> pd.DataFrame:
-    df_sorted = df.sort_values('match_date').copy()
-
-    # Compute margins
-    df_sorted['home_margin'] = df_sorted['home_scores'] - df_sorted['away_scores']
-    df_sorted['away_margin'] = df_sorted['away_scores'] - df_sorted['home_scores']
-
-    # Rolling average of home margin: last 10 HOME games before the current one
-    df_sorted['home_team_advantage'] = (
-        df_sorted
-        .groupby('home_team')['home_margin']
-        .rolling(window=10, min_periods=1, closed='left')
-        .mean()
-        .reset_index(level=0, drop=True)
-    )
-
-    # Similarly for away margin: average over last 10 AWAY games before current one
-    df_sorted['away_team_disadvantage'] = (
-        df_sorted
-        .groupby('away_team')['away_margin']
-        .rolling(window=10, min_periods=1, closed='left')
-        .mean()
-        .reset_index(level=0, drop=True)
-    )
-
-    # Net home advantage metric
-    df_sorted['total_home_advantage'] = (
-            df_sorted['home_team_advantage'] - df_sorted['away_team_disadvantage']
-    )
-
-    return df_sorted
-
-def compute_home_adv_last_3_games(df: pd.DataFrame) -> pd.DataFrame:
-    df_sorted = df.sort_values('match_date').copy()
-
-    # Rolling average of home margin: last 3 HOME games before the current one
-
-    df_sorted['home_margin'] = df_sorted['home_scores'] - df_sorted['away_scores']
-    df_sorted['away_margin'] = df_sorted['away_scores'] - df_sorted['home_scores']
-
-    df_sorted['home_team_advantage_last_3_games'] = (
-        df_sorted
-        .groupby('home_team')['home_margin']
-        .rolling(window=3, min_periods=1, closed='left')
-        .mean()
-        .reset_index(level=0, drop=True)
-    )
-
-    # Similarly for away margin: average over last 3 AWAY games before current one
-    df_sorted['away_team_disadvantage_last_3_games'] = (
-        df_sorted
-        .groupby('away_team')['away_margin']
-        .rolling(window=3, min_periods=1, closed='left')
-        .mean()
-        .reset_index(level=0, drop=True)
-    )
-
-    # Net home advantage metric
-    df_sorted['total_home_advantage_last_3_games'] = (
-            df_sorted['home_team_advantage_last_3_games'] - df_sorted['away_team_disadvantage_last_3_games']
-    )
-
-    return df_sorted
-
-
-
 def stack_dfs(*dfs: pd.DataFrame) -> pd.DataFrame:
     """
     Stacks (concatenates) multiple DataFrames row-wise,
     flexibly parses match_date, and handles malformed entries.
     """
+
     df = pd.concat(dfs, axis=0, ignore_index=True)
     df = df.rename(columns={'date': 'match_date'})
 
@@ -120,16 +54,120 @@ def stack_dfs(*dfs: pd.DataFrame) -> pd.DataFrame:
         df['match_date'],
         errors='coerce',
         infer_datetime_format=True,
-        dayfirst=False  # set to True if your data is D/M/Y
+        dayfirst=False
     )
     df = df[df['match_date'].notna()]
-
     df = df.sort_values(by='match_date', ascending=True).reset_index(drop=True)
     df = df.drop_duplicates(subset=['match_link'], keep='first')
     df = rename_competitions(df)
 
     return df
 
+
+def compute_home_adv(df: pd.DataFrame) -> pd.DataFrame:
+
+    WORLD_CUP_HOSTS = {
+        2011: 'New Zealand',
+        2015: 'England',
+        2019: 'Japan',
+        2023: 'France'
+    }
+    df['match_date'] = pd.to_datetime(df['match_date'], errors='raise')
+    df_sorted = df.sort_values('match_date').copy()
+
+
+    # Compute raw margins
+    df_sorted['home_margin'] = df_sorted['home_scores'] - df_sorted['away_scores']
+    df_sorted['away_margin'] = df_sorted['away_scores'] - df_sorted['home_scores']
+
+    # Rolling average last 10 games
+    df_sorted['home_team_advantage'] = (
+        df_sorted
+        .groupby('home_team')['home_margin']
+        .rolling(window=10, min_periods=1, closed='left')
+        .mean()
+        .reset_index(level=0, drop=True)
+    )
+
+    df_sorted['away_team_disadvantage'] = (
+        df_sorted
+        .groupby('away_team')['away_margin']
+        .rolling(window=10, min_periods=1, closed='left')
+        .mean()
+        .reset_index(level=0, drop=True)
+    )
+
+    # Determine if match is World Cup and get year
+    df_sorted['match_year'] = df_sorted['match_date'].dt.year
+    mask_wc = df_sorted['competition'] == 'world-cup'
+
+    # Only the home team that matches the official host for that year keeps advantage
+    df_sorted.loc[mask_wc, 'home_team_advantage'] = df_sorted.loc[mask_wc].apply(
+        lambda row: row['home_team_advantage']
+        if WORLD_CUP_HOSTS.get(row['match_year']) == row['home_team']
+        else 0,
+        axis=1
+    )
+
+    # Away team disadvantage always zero for World Cup
+    df_sorted.loc[mask_wc, 'away_team_disadvantage'] = 0
+
+    # Net home advantage
+    df_sorted['total_home_advantage'] = (
+        df_sorted['home_team_advantage'] - df_sorted['away_team_disadvantage']
+    )
+
+    return df_sorted
+
+def compute_home_adv_last_3_games(df: pd.DataFrame) -> pd.DataFrame:
+    WORLD_CUP_HOSTS = {
+        2011: 'New Zealand',
+        2015: 'England',
+        2019: 'Japan',
+        2023: 'France'
+    }
+    df['match_date'] = pd.to_datetime(df['match_date'], errors='raise')
+    df_sorted = df.sort_values('match_date').copy()
+
+    df_sorted['home_margin'] = df_sorted['home_scores'] - df_sorted['away_scores']
+    df_sorted['away_margin'] = df_sorted['away_scores'] - df_sorted['home_scores']
+
+    df_sorted['home_team_advantage_last_3_games'] = (
+        df_sorted
+        .groupby('home_team')['home_margin']
+        .rolling(window=3, min_periods=1, closed='left')
+        .mean()
+        .reset_index(level=0, drop=True)
+    )
+
+    df_sorted['away_team_disadvantage_last_3_games'] = (
+        df_sorted
+        .groupby('away_team')['away_margin']
+        .rolling(window=3, min_periods=1, closed='left')
+        .mean()
+        .reset_index(level=0, drop=True)
+    )
+
+    df_sorted['match_year'] = df_sorted['match_date'].dt.year
+    mask_wc = df_sorted['competition'] == 'world-cup'
+
+    # Home advantage only retained if actual host
+    df_sorted.loc[mask_wc, 'home_team_advantage_last_3_games'] = df_sorted.loc[mask_wc].apply(
+        lambda row: row['home_team_advantage_last_3_games']
+        if WORLD_CUP_HOSTS.get(row['match_year']) == row['home_team']
+        else 0,
+        axis=1
+    )
+
+    # Away disadvantage zero for World Cup
+    df_sorted.loc[mask_wc, 'away_team_disadvantage_last_3_games'] = 0
+
+    df_sorted['total_home_advantage_last_3_games'] = (
+        df_sorted['home_team_advantage_last_3_games']
+        - df_sorted['away_team_disadvantage_last_3_games']
+    )
+
+    return df_sorted
 
 
 def calculate_expected_probability(home_elo, away_elo, home_advantage):
@@ -199,36 +237,6 @@ def compute_pre_and_post_match_elo(dataframe: pd.DataFrame, initial_rating: floa
 
     return output
 
-
-def create_basic_features(df):
-
-    df.drop(columns=["home_team_odds", "draw_team_odds", "away_team_odds", "home_prob_BE", "draw_prob_BE", "away_prob_BE", "home_prob", "draw_prob", "away_prob"], inplace=True)
-
-    df = create_match_ids(df)
-    df = create_team_ids(df)
-    df = compute_home_adv(df)
-    df = compute_home_adv_last_3_games(df)
-    df = add_team_avg_score_diff(df)
-    df = add_team_win_streak(df)
-    df = add_fixture_score_diff_avg(df)
-    df = add_fixture_home_away_score_diff_avg(df)
-    df = add_score_diff_last_fixture(df)
-
-    return df
-
-def create_elo_and_score_difference(df):
-
-    df["pre_match_elo_difference"] = df["home_elo_pre_match"] - df["away_elo_pre_match"]
-    df["elo_avg_change_difference_last_match"] = df["home_avg_elo_change_last_match"] - df["away_avg_elo_change_last_match"]
-    df["elo_avg_change_difference_last_5_matches"] = df["home_avg_elo_change_last_5_matches"] - df["away_avg_elo_change_last_5_matches"]
-    df["elo_avg_change_difference_last_10_matches"] = df["home_avg_elo_change_last_10_matches"] - df["away_avg_elo_change_last_10_matches"]
-    df["last_avg_match_scores_difference"] = df["home_avg_score_diff_last_1"] - df["away_avg_score_diff_last_1"]
-    df["last_avg_5_match_scores_difference"] = df["home_avg_score_diff_last_5"] - df["away_avg_score_diff_last_5"]
-    df["last_avg_10_match_scores_difference"] = df["home_avg_score_diff_last_10"] - df["away_avg_score_diff_last_10"]
-
-    return df
-
-
 def add_team_elo_changes(df):
     """
     Calculate average Elo change for each team over their last 1, 5, and 10 matches,
@@ -271,6 +279,44 @@ def add_team_elo_changes(df):
     df = df.merge(away_avg, on=['match_date', 'away_team'], how='left')
 
     return df
+
+def create_elo_and_score_difference(df):
+
+    df["pre_match_elo_difference"] = df["home_elo_pre_match"] - df["away_elo_pre_match"]
+    df["elo_avg_change_difference_last_match"] = df["home_avg_elo_change_last_match"] - df["away_avg_elo_change_last_match"]
+    df["elo_avg_change_difference_last_5_matches"] = df["home_avg_elo_change_last_5_matches"] - df["away_avg_elo_change_last_5_matches"]
+    df["elo_avg_change_difference_last_10_matches"] = df["home_avg_elo_change_last_10_matches"] - df["away_avg_elo_change_last_10_matches"]
+    df["last_avg_match_scores_difference"] = df["home_avg_score_diff_last_1"] - df["away_avg_score_diff_last_1"]
+    df["last_avg_5_match_scores_difference"] = df["home_avg_score_diff_last_5"] - df["away_avg_score_diff_last_5"]
+    df["last_avg_10_match_scores_difference"] = df["home_avg_score_diff_last_10"] - df["away_avg_score_diff_last_10"]
+
+    return df
+
+
+def create_basic_features(df):
+
+    df.drop(columns=["home_team_odds", "draw_team_odds", "away_team_odds", "home_prob_BE", "draw_prob_BE", "away_prob_BE", "home_prob", "draw_prob", "away_prob"], inplace=True)
+
+    df = create_match_ids(df)
+    df = create_team_ids(df)
+    df = compute_home_adv(df)
+    df = compute_home_adv_last_3_games(df)
+    df = add_team_avg_score_diff(df)
+    df = add_team_win_streak(df)
+    df = add_fixture_score_diff_avg(df)
+    df = add_fixture_home_away_score_diff_avg(df)
+    df = add_score_diff_last_fixture(df)
+
+    return df
+
+def create_elo_features(df):
+
+    df = compute_pre_and_post_match_elo(df)
+    df = add_team_elo_changes(df)
+    df = create_elo_and_score_difference(df)
+
+    return df
+
 
 def add_team_avg_score_diff(df):
     """
@@ -455,10 +501,34 @@ def add_score_diff_last_fixture(df):
 
     return df
 
-def create_elo_features(df):
 
-    df = compute_pre_and_post_match_elo(df)
-    df = add_team_elo_changes(df)
-    df = create_elo_and_score_difference(df)
+def drop_first_games(df):
+    """
+    Removes matches where either team is playing their first game,
+    while preserving all columns and keeping a unique 'observation_id' for each row.
+    """
 
-    return df
+    df = df.copy()
+    df['match_date'] = pd.to_datetime(df['match_date'])
+
+    # Get first appearance per team
+    team_appearances = pd.concat([
+        df[['home_team', 'match_date']].rename(columns={'home_team': 'team'}),
+        df[['away_team', 'match_date']].rename(columns={'away_team': 'team'})
+    ])
+
+    first_match_dates = team_appearances.groupby('team')['match_date'].min().to_dict()
+
+    df['home_team_first'] = df.apply(lambda row: row['match_date'] == first_match_dates[row['home_team']], axis=1)
+    df['away_team_first'] = df.apply(lambda row: row['match_date'] == first_match_dates[row['away_team']], axis=1)
+
+    # Filter out first games
+    df_filtered = df[~(df['home_team_first'] | df['away_team_first'])].drop(
+        columns=['home_team_first', 'away_team_first']
+    )
+
+
+    df_filtered = df_filtered.copy()
+    df_filtered['observation_id'] = df_filtered.index
+
+    return df_filtered

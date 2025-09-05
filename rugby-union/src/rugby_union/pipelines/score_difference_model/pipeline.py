@@ -11,12 +11,6 @@ from prospect.models.predictions import create_model_ensemble_predictions_df
 def create_pipeline(**kwargs) -> Pipeline:
     return pipeline([
         node(
-            func=drop_first_games,
-            inputs="complete_matches_df_with_elo_features",
-            outputs="model_input_df",
-            name="drop_first_games_node"
-        ),
-        node(
             func=train_score_difference_model,
             inputs="model_input_df",
             outputs="xgboost_regression_forecasting_future_score_difference_model_ensemble",
