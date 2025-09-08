@@ -10,7 +10,12 @@ def create_pipeline(**kwargs) -> Pipeline:
     return pipeline([
         node(
             func=stack_dfs,
-            inputs=["scraped_rugby_odds_df_3", "scraped_rugby_odds_df_2", "scraped_rugby_odds_df_1", "scraped_rugby_odds_df_4"],
+            inputs=["scraped_rugby_odds_df_1",
+                    "scraped_rugby_odds_df_2",
+                    "scraped_rugby_odds_df_3",
+                    "scraped_rugby_odds_df_4",
+                    "scraped_rugby_odds_df_6"
+                    ],
             outputs="complete_matches_df",
             name="stack_dataframes_node"
         ),
@@ -27,8 +32,15 @@ def create_pipeline(**kwargs) -> Pipeline:
             name="create_elo_features_node"
         ),
         node(
-            func=drop_first_games,
+            func=add_rolling_win_pct,
             inputs="complete_matches_df_with_elo_features",
+            outputs="complete_matches_df_with_pct_features",
+            name="add_rolling_win_pct_node"
+
+        ),
+        node(
+            func=drop_first_games,
+            inputs="complete_matches_df_with_pct_features",
             outputs="model_input_df",
             name="drop_first_games_node"
         ),

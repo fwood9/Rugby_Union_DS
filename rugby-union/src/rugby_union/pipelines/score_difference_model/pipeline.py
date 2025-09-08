@@ -44,6 +44,12 @@ def create_pipeline(**kwargs) -> Pipeline:
             name="create_model_coefficients_summary_plot_node",
         ),
         node(
+            func=make_prediction_scatter_plot,
+            inputs="xgboost_regression_forecasting_future_score_difference_model_ensemble_predictions_df",
+            outputs="model_predictions_scatter_plot",
+            name="make_prediction_scatter_plot_node",
+        ),
+        node(
             func=create_model_ensemble_predictions_df,
             inputs=["model_input_df", "xgboost_regression_forecasting_future_score_difference_model_ensemble"],
             outputs=["xgboost_regression_forecasting_future_score_difference_model_ensemble_predictions_df",

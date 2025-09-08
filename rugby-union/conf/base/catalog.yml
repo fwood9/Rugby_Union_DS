@@ -71,6 +71,14 @@ scraped_rugby_odds_df_4:
  type: pandas.CSVDataset
  filepath: data/03_primary/scraped_rugby_odds_df_4.csv
 
+scraped_rugby_odds_df_5:
+ type: pandas.CSVDataset
+ filepath: data/03_primary/scraped_rugby_odds_df_5.csv
+
+scraped_rugby_odds_df_6:
+ type: pandas.CSVDataset
+ filepath: data/03_primary/scraped_rugby_odds_df_6.csv
+
 complete_matches_df_with_basic_features:
  type: pandas.CSVDataset
  filepath: data/04_feature/complete_matches_df_with_basic_features.csv
@@ -78,6 +86,10 @@ complete_matches_df_with_basic_features:
 complete_matches_df_with_elo_features:
  type: pandas.CSVDataset
  filepath: data/04_feature/complete_matches_df_with_elo_features.csv
+
+complete_matches_df_with_pct_features:
+ type: pandas.CSVDataset
+ filepath: data/04_feature/complete_matches_df_with_pct_features.csv
 
 model_input_df:
  type: pandas.CSVDataset
@@ -122,6 +134,12 @@ xgboost_regression_forecasting_future_score_difference_model_bag_metrics_df:
 model_coefficients_summary_plot:
   type: matplotlib.MatplotlibWriter
   filepath: data/08_reporting/score_difference_model/model_coefficients_summary_plot.png
+  save_args:
+    format: png
+
+model_predictions_scatter_plot:
+  type: matplotlib.MatplotlibWriter
+  filepath: data/08_reporting/score_difference_model/model_predictions_scatter_plot.png
   save_args:
     format: png
 

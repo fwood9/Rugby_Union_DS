@@ -61,6 +61,7 @@ def rename_competitions(df):
         "league-one-": "league-one",
         "cn-honra-": "cn-honra",
         "nationale-": "nationale",
+        "top-": "URBA-top12"
     }
     df["competition"] = df["competition"].replace(mapping)
     return df
@@ -136,6 +137,27 @@ def create_team_ids(df):
     df['away_team_id'] = df['away_team'].map(team_to_id)
     return df
 
+def encode_winner(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Adds a new column to the DataFrame converting 'winner' to numerical values:
+      - "Home" → 1.0
+      - "Away" → 0.0
+      - "Draw" → 0.5
+
+    Parameters:
+    - df: Input DataFrame with a categorical winner column.
+
+    Returns:
+    - DataFrame with the new numeric column added.
+    """
+    mapping = {
+        "Home": 1.0,
+        "Away": 0.0,
+        "Draw": 0.5
+    }
+    df = df.copy()
+    df["encoded_result"] = df["winner"].map(mapping)
+    return df
 
 def stack_dfs(*dfs: pd.DataFrame) -> pd.DataFrame:
     """
@@ -165,7 +187,7 @@ def stack_dfs(*dfs: pd.DataFrame) -> pd.DataFrame:
     -----
     - Input columns named `date` are renamed internally to `match_date`.
     - Rows with missing or unparsable `match_date` are dropped.
-    - The function depends on `rename_competitions` to standardize competition names.
+    - The function depends on `rename_competitions` to standardize competition names and adds a win/loss/draw indicator
 
     Examples
     --------
@@ -201,11 +223,48 @@ def stack_dfs(*dfs: pd.DataFrame) -> pd.DataFrame:
     )
     df = df[df['match_date'].notna()]
     df = df.sort_values(by='match_date', ascending=True).reset_index(drop=True)
-    df = df.drop_duplicates(subset=['match_link'], keep='first')
+    df = df.drop_duplicates(subset=['match_link'], keep='last')
     df = rename_competitions(df)
+    df = encode_winner(df)
 
     return df
 
+def add_international_match_indicator(df):
+
+    TARGET_LEAGUES = {"six-nations",
+                      "friendly-international",
+                      "rugby-championship",
+                      "world-cup",
+                      "pacific-nations-cup",
+                      "autumn-nations-cup",
+                      }
+
+    df_copy = df.copy()
+    df_copy['international_fixture_indicator'] = np.where(
+        df_copy['competition'].isin(TARGET_LEAGUES),
+        1,
+        0
+    ).astype(int)
+    return df_copy
+
+
+def add_top_leagues_match_indicator(df):
+
+    TARGET_LEAGUES = {"urc",
+                      "european-champions-cup",
+                      "gallagher-premiership-rugby",
+                      "top14",
+                      "super-rugby",
+                      "european-challenge-cup",
+                      }
+
+    df_copy = df.copy()
+    df_copy['top_leagues_indicator'] = np.where(
+        df_copy['competition'].isin(TARGET_LEAGUES),
+        1,
+        0
+    ).astype(int)
+    return df_copy
 
 def compute_home_adv(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -541,6 +600,7 @@ def compute_pre_and_post_match_elo(dataframe: pd.DataFrame,
 
     """
     df = dataframe.sort_values('match_date').copy()
+    df = df.drop_duplicates(subset=['match_id', 'match_link'], keep='last')
     df['total_home_advantage'] = df['total_home_advantage'].fillna(0)
 
     teams = pd.unique(df[['home_team', 'away_team']].values.ravel())
@@ -771,6 +831,8 @@ def create_basic_features(df: pd.DataFrame) -> pd.DataFrame:
 
     df = create_match_ids(df)
     df = create_team_ids(df)
+    df = add_international_match_indicator(df)
+    df = add_top_leagues_match_indicator(df)
     df = compute_home_adv(df)
     df = compute_home_adv_last_3_games(df)
     df = add_team_avg_score_diff(df)
@@ -778,6 +840,8 @@ def create_basic_features(df: pd.DataFrame) -> pd.DataFrame:
     df = add_fixture_score_diff_avg(df)
     df = add_fixture_home_away_score_diff_avg(df)
     df = add_score_diff_last_fixture(df)
+
+    df = df.drop_duplicates(subset=['match_id', 'match_link'], keep='last')
 
     return df
 
@@ -818,6 +882,8 @@ def create_elo_features(df: pd.DataFrame) -> pd.DataFrame:
 
     The resulting DataFrame can be used for further analysis or modeling tasks.
     """
+    df = df.drop_duplicates(subset=['match_id', 'match_link'], keep='last')
+
     df = compute_pre_and_post_match_elo(df)
     df = add_team_elo_changes(df)
     df = create_elo_and_score_difference(df)
@@ -1114,6 +1180,138 @@ def add_score_diff_last_fixture(df):
         fixture_history[fixture_key].append(current_diff)
 
     return df
+
+
+def add_rolling_win_pct(df):
+    """
+    Add rolling win-percentage features for both home and away teams.
+
+    Computes the rolling win percentage over the last N matches (e.g., 5, 10, 20),
+    excluding the current match, and merges these metrics back into the original
+    match-level DataFrame.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Match-level data, containing at least the following columns:
+        - `match_id` : unique identifier per match
+        - `match_link` : potential duplicate identifier to help deduplication
+        - `match_date` : datetime-like, used to order matches chronologically
+        - `home_team_id` : identifier of the home team
+        - `away_team_id` : identifier of the away team
+        - `encoded_result` : numeric result encoded as 1.0 (home win), 0.5 (draw),
+          or 0.0 (home loss)
+
+    Returns
+    -------
+    pandas.DataFrame
+        The original DataFrame with additional columns:
+        - `win_pct_last_5_home`, `win_pct_last_10_home`, `win_pct_last_20_home`
+        - `win_pct_last_5_away`, `win_pct_last_10_away`, `win_pct_last_20_away`
+        representing the team's rolling win percentage prior to that match.
+
+    Notes
+    -----
+    - The function first deduplicates and sorts the DataFrame by match date, ensuring
+      accurate chronological order.
+    - It transforms the data into a long (per-team) format to compute team-level
+      rolling metrics via `groupby().transform()`, which preserves alignment with
+      the original index and avoids common pitfalls of `groupby().rolling()`.
+    - For each rolling window, the win percentage excludes the current match result
+      (`shift(1)`), and percentages are set to `NaN` when there are no prior matches
+       for that team.
+
+    Examples
+    --------
+     df = pd.DataFrame({
+    ...     'match_id': [1, 2, 3],
+    ...     'match_link': ['a', 'b', 'c'],
+    ...     'match_date': pd.to_datetime(['2025-01-01', '2025-01-02', '2025-01-03']),
+    ...     'home_team_id': ['A', 'B', 'A'],
+    ...     'away_team_id': ['B', 'A', 'B'],
+    ...     'encoded_result': [1.0, 0.0, 0.5]  # A wins, B loses; B wins, A loses; draw
+    ... })
+     result = add_rolling_win_pct(df)
+     result.columns
+    Index([... 'win_pct_last_5_home', ..., 'win_pct_last_20_away'], dtype='object')
+    """
+    # 1. Clean data: remove duplicates, sort by date, and reset index
+    df = (
+        df.drop_duplicates(subset=['match_id', 'match_link'], keep='last')
+          .sort_values(by='match_date')
+          .reset_index(drop=True)
+    )
+
+    windows = (5, 10, 20, 50)
+    match_id_col = 'match_id'
+
+    # 2. Build long-form DataFrame: each row represents a team in a match
+    home = df[[match_id_col, 'home_team_id', 'encoded_result', 'match_date']].copy()
+    home.columns = [match_id_col, 'team_id', 'result', 'match_date']
+    home['home_away'] = 'home'
+
+    away = df[[match_id_col, 'away_team_id', 'encoded_result', 'match_date']].copy()
+    away.columns = [match_id_col, 'team_id', 'result', 'match_date']
+    away['home_away'] = 'away'
+    # Flip perspective: home win = away loss, etc.
+    away['result'] = away['result'].map({1.0: 0.0, 0.0: 1.0, 0.5: 0.5})
+
+    long = pd.concat([home, away], ignore_index=True)
+    # Sort by team and date to ensure rolling windows are correct per team
+    long = long.sort_values(by=['team_id', 'match_date']).reset_index(drop=True)
+    long['win_value'] = long['result']
+
+    # 3. Compute rolling win percentages per team via transform (keeps alignment)
+    for w in windows:
+        col = f'win_pct_last_{w}'
+        long[col] = (
+            long.groupby('team_id')['win_value']
+                .transform(lambda s: s.shift(1).rolling(window=w, min_periods=1).mean())
+                * 100
+        )
+        # Ensure that early games (no prior matches) show as NaN
+        long.loc[long.groupby('team_id').cumcount() < 1, col] = pd.NA
+
+    # 4. Extract only the columns needed for merging
+    metrics = long[[match_id_col, 'team_id'] + [f'win_pct_last_{w}' for w in windows]].copy()
+
+    # 5. Merge rolling metrics for home teams
+    merged = df.merge(
+        metrics.add_suffix('_home'),
+        left_on=[match_id_col, 'home_team_id'],
+        right_on=[f'{match_id_col}_home', 'team_id_home'],
+        how='left'
+    )
+
+    # 6. Merge rolling metrics for away teams
+    merged = merged.merge(
+        metrics.add_suffix('_away'),
+        left_on=[match_id_col, 'away_team_id'],
+        right_on=[f'{match_id_col}_away', 'team_id_away'],
+        how='left'
+    )
+
+    # 7. Cleanup: retain only the newly added rolling metric columns
+    kept = [f'win_pct_last_{w}_home' for w in windows] + [f'win_pct_last_{w}_away' for w in windows]
+    drop_cols = [
+        col for col in merged.columns
+        if (col.endswith('_home') or col.endswith('_away')) and col not in kept
+    ]
+
+    merged["win_pct_last_5_diff"] = (
+            merged["win_pct_last_5_home"] - merged["win_pct_last_5_away"]
+    )
+    merged["win_pct_last_10_diff"] = (
+            merged["win_pct_last_10_home"] - merged["win_pct_last_10_away"]
+    )
+    merged["win_pct_last_20_diff"] = (
+            merged["win_pct_last_20_home"] - merged["win_pct_last_20_away"]
+    )
+    merged["win_pct_last_50_diff"] = (
+            merged["win_pct_last_50_home"] - merged["win_pct_last_50_away"]
+    )
+
+    return merged.drop(columns=drop_cols)
 
 
 def drop_first_games(df):

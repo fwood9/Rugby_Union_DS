@@ -4,6 +4,7 @@ generated using Kedro 0.19.14
 """
 from prospect.models.training import train_model_ensemble
 from prospect.models.training import evaluate_model_ensemble
+from prospect.models.plotting import create_model_predictions_scatter_plot
 import pandas as pd
 
 
@@ -41,7 +42,13 @@ def train_score_difference_model(df):
         "avg_score_diff_last_3_between_teams",
       #  "avg_score_diff_last_3_same_fixture",
         "total_home_advantage_last_3_games",
-        "score_diff_last_fixture"
+        "score_diff_last_fixture",
+        "win_pct_last_5_diff",
+        "win_pct_last_10_diff",
+        "win_pct_last_20_diff",
+        "win_pct_last_50_diff",
+        "international_fixture_indicator",
+        "top_leagues_indicator"
     ]
 
     y_variable = "home_margin"
@@ -111,9 +118,15 @@ def evaluate_score_difference_model(
         "last_avg_10_match_scores_difference",
         "home_win_streak", "away_win_streak",
         "avg_score_diff_last_3_between_teams",
-        #"avg_score_diff_last_3_same_fixture",
+        #  "avg_score_diff_last_3_same_fixture",
         "total_home_advantage_last_3_games",
-        "score_diff_last_fixture"
+        "score_diff_last_fixture",
+        "win_pct_last_5_diff",
+        "win_pct_last_10_diff",
+        "win_pct_last_20_diff",
+        "win_pct_last_50_diff",
+        "international_fixture_indicator",
+        "top_leagues_indicator"
     ]
 
     y_variable = "home_margin"
@@ -128,6 +141,15 @@ def evaluate_score_difference_model(
         return_train_test_predictions_df=return_train_test_predictions_df,
         rename_predicted_columns_dict=rename_predicted_columns_dict or {}
     )
+
+
+def make_prediction_scatter_plot(df):
+    """
+    Kedro node wrapper for the existing plot function.
+    """
+    df = df.dropna()
+    fig = create_model_predictions_scatter_plot(df, "home_margin", "home_margin_predicted")
+    return fig
 
 
 

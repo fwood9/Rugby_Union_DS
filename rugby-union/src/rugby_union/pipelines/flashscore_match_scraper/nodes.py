@@ -346,9 +346,9 @@ def clean_match_weekly(df: pd.DataFrame) -> pd.DataFrame:
         .str.replace(" ", "-", regex=False)
     )
 
-    # Ensure `match_link` is a string, then drop duplicate matches (keep first)
+    # Ensure `match_link` is a string, then drop duplicate matches (keep last)
     df["match_link"] = df["match_link"].astype(str)
-    df = df.drop_duplicates(subset=["match_link"], keep="first")
+    df = df.drop_duplicates(subset=["match_link"], keep="last")
 
     # Standardize result format to "X - Y"
     df["result"] = (
