@@ -154,3 +154,54 @@ xgboost_regression_forecasting_future_score_difference_model_individual_predicti
 model_input_with_encoded_winner_df:
  type: pandas.CSVDataset
  filepath: data/05_model_input/match_outcome_model/model_input_with_encoded_winner_df.csv
+
+
+xgboost_classification_result_bool_model_ensemble:
+ type: pickle.PickleDataset
+ filepath: data/06_models/match_outcome_model/xgboost_classification_result_bool_model_ensemble.pkl
+
+xgboost_classification_result_bool_model_coefficients_df:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/match_outcome_model/xgboost_coefficients_df.csv
+
+xgboost_classification_result_bool_model_coefficients_summary_df:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/match_outcome_model/xgboost_coefficients_summary.csv
+
+xgboost_classification_result_bool_model_predictions_df:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/match_outcome_model/xgboost_predictions.csv
+
+xgboost_classification_result_bool_model_train_predictions_df:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/match_outcome_model/xgboost_train_predictions.csv
+
+xgboost_classification_result_bool_model_test_predictions_df:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/match_outcome_model/xgboost_test_predictions.csv
+
+xgboost_classification_result_bool_model_metrics_df:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/match_outcome_model/xgboost_test_metrics.csv
+
+xgboost_classification_result_bool_model_train_metrics_df:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/match_outcome_model/xgboost_train_metrics.csv
+
+xgboost_classification_result_bool_model_bag_metrics_df:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/match_outcome_model/xgboost_bag_metrics.csv
+
+model_coefficients_summary_plot_match_outcome_prediction_model:
+  type: matplotlib.MatplotlibWriter
+  filepath: data/08_reporting/match_outcome_model/model_coefficients_summary_plot.png
+  save_args:
+    format: png
+
+xgboost_classification_result_bool_model_ensemble_predictions_df:
+  type: pandas.CSVDataset
+  filepath: data/06_models/match_outcome_model/ensemble_predictions.csv
+
+xgboost_classification_result_bool_model_individual_predictions_df:
+  type: pandas.CSVDataset
+  filepath: data/06_models/match_outcome_model/individual_predictions.csv

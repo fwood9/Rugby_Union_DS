@@ -126,7 +126,7 @@ def evaluate_score_difference_model(
         "win_pct_last_20_diff",
         "win_pct_last_50_diff",
         "international_fixture_indicator",
-        "top_leagues_indicator"
+        "top_leagues_indicator",
     ]
 
     y_variable = "home_margin"

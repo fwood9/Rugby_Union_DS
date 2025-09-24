@@ -1,0 +1,3 @@
+model_error_metrics: ["r2_score", "mean_absolute_error"]
+return_train_test_predictions_df: true
+rename_predicted_columns_dict: {}

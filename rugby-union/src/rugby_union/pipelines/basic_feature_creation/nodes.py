@@ -159,6 +159,15 @@ def encode_winner(df: pd.DataFrame) -> pd.DataFrame:
     df["encoded_result"] = df["winner"].map(mapping)
     return df
 
+def add_home_bool_with_lambda(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Adds a 'home_bool' column using a lambda:
+      - home_bool = 1 if encoded_result == 1
+      - home_bool = 0 if encoded_result == 0.5 (draw) or 0 (away win)
+    """
+    df['home_bool'] = df['encoded_result'].apply(lambda x: 1 if x == 1 else 0).astype(int)
+    return df
+
 def stack_dfs(*dfs: pd.DataFrame) -> pd.DataFrame:
     """
     Stack multiple DataFrames and normalize match_date entries.
@@ -226,6 +235,7 @@ def stack_dfs(*dfs: pd.DataFrame) -> pd.DataFrame:
     df = df.drop_duplicates(subset=['match_link'], keep='last')
     df = rename_competitions(df)
     df = encode_winner(df)
+    df = add_home_bool_with_lambda(df)
 
     return df
 

@@ -5,9 +5,6 @@
 # Link: https://docs.kedro.org/en/0.19.14/configuration/parameters.html
 
 
-model_error_metrics: ["r2_score", "mean_absolute_error"]
-return_train_test_predictions_df: true
-rename_predicted_columns_dict: {}
 
 model_features:
   - total_home_advantage
